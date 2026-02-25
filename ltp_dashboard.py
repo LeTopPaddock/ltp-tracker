@@ -34,7 +34,7 @@ st.markdown(f"""
 <style>
   [data-testid="stAppViewContainer"] {{ background-color: {BG}; }}
   [data-testid="stHeader"] {{ background-color: {BG}; }}
-  .block-container {{ padding-top: 2rem; padding-bottom: 2rem; max-width: 1400px; }}
+  .block-container {{ padding-top: 2rem; padding-bottom: 3rem; max-width: 1400px; }}
   .metric-card {{
       background: {CARD_BG}; border: 1px solid {BORDER};
       border-radius: 12px; padding: 20px 16px; text-align: center;
@@ -43,17 +43,24 @@ st.markdown(f"""
   .metric-label {{ font-size: 0.75rem; color: {MUTED}; text-transform: uppercase; letter-spacing: 0.06em; }}
   .section-title {{
       font-size: 1.05rem; font-weight: 600; color: {TEXT};
-      border-left: 3px solid {GOLD}; padding-left: 10px; margin: 28px 0 14px;
+      border-left: 3px solid {GOLD}; padding-left: 10px;
+      margin: 32px 0 16px;
+  }}
+  .sport-header {{
+      font-size: 1.1rem; font-weight: 700;
+      margin-bottom: 18px; padding-bottom: 10px;
+      border-bottom: 1px solid {BORDER};
   }}
   div[data-testid="stDataFrame"] {{ border-radius: 10px; overflow: hidden; }}
   h1 {{ color: {TEXT} !important; }}
   h2, h3 {{ color: {TEXT} !important; }}
   .stTabs [data-baseweb="tab"] {{ color: {MUTED}; font-weight: 500; }}
   .stTabs [aria-selected="true"] {{ color: {GOLD} !important; border-bottom-color: {GOLD} !important; }}
+  .stMultiSelect [data-baseweb="tag"] {{ background-color: #1e2535; }}
 </style>
 """, unsafe_allow_html=True)
 
-# ── Normalization maps ─────────────────────────────────────────────────────────
+# ── Normalisation maps ─────────────────────────────────────────────────────────
 BET_TYPE_MAP = {
     "parlay":        "Parlay",
     "combo":         "Parlay",
@@ -70,68 +77,83 @@ BET_TYPE_MAP = {
     "other":         "Other",
 }
 
-# Case-insensitive league map
 LEAGUE_MAP = {
-    # Soccer — domestic
-    "england":           "Premier League",
-    "premier league":    "Premier League",
-    "spain":             "La Liga",
-    "la liga":           "La Liga",
-    "italy":             "Serie A",
-    "serie a":           "Serie A",
-    "germany":           "Bundesliga",
-    "bundesliga":        "Bundesliga",
-    "france":            "Ligue 1",
-    "ligue 1":           "Ligue 1",
-    "otherenglish":      "EFL",
-    "efl":               "EFL",
-    "efl championship":  "EFL",
-    "argentina":         "Argentine Primera",
-    "denmark":           "Danish Superliga",
-    "soccer":            "Multi-League Parlay",
-    # Soccer — European
-    "champions":         "Champions League",
-    "champions league":  "Champions League",
-    "ucl":               "Champions League",
-    "europa":            "Europa League",
-    "europa league":     "Europa League",
-    "uel":               "Europa League",
-    "conference league": "Conference League",
-    "uecl":              "Conference League",
-    # Tennis
-    "atp 500":           "ATP 500",
-    "atp 250":           "ATP 250",
-    "atp 1000":          "ATP Masters 1000",
-    "challenger":        "ATP Challenger",
-    "atp challenger":    "ATP Challenger",
-    "tennis":            "ATP Tour",
-    "acapulco open":     "Acapulco Open",
-    "acapulco":          "Acapulco Open",
-    "rio open":          "Rio Open",
-    "rotterdam open":    "Rotterdam Open",
-    "rotterdam":         "Rotterdam Open",
-    "buenos aires":      "Argentina Open",
-    "argentina open":    "Argentina Open",
-    "marseille":         "Marseille Open",
-    "marseille open":    "Marseille Open",
-    "dubai":             "Dubai Open",
-    "dubai open":        "Dubai Open",
-    "indian wells":      "Indian Wells",
-    "miami open":        "Miami Open",
-    "miami":             "Miami Open",
+    # Soccer — European top flights
+    "england": "Premier League",            "premier league": "Premier League",
+    "spain": "La Liga",                     "la liga": "La Liga",
+    "italy": "Serie A",                     "serie a": "Serie A",
+    "germany": "Bundesliga",                "bundesliga": "Bundesliga",
+    "france": "Ligue 1",                    "ligue 1": "Ligue 1",
+    "otherenglish": "EFL Championship",     "efl": "EFL Championship",
+    "efl championship": "EFL Championship", "championship": "EFL Championship",
+    "turkey": "Süper Lig",                  "super lig": "Süper Lig",
+    "netherlands": "Eredivisie",            "eredivisie": "Eredivisie",
+    "portugal": "Primeira Liga",            "primeira liga": "Primeira Liga",
+    "scotland": "Scottish Premiership",     "ireland": "League of Ireland",
+    # Soccer — Americas / other
+    "argentina": "Argentine Primera",
+    "argentine primera división": "Argentine Primera",
+    "denmark": "Danish Superliga",          "danish superliga": "Danish Superliga",
+    # Soccer — European cups
+    "champions": "Champions League",        "champions league": "Champions League",
+    "ucl": "Champions League",
+    "europa": "Europa League",              "europa league": "Europa League",
+    "uel": "Europa League",
+    "conference league": "Conference League", "uecl": "Conference League",
+    # Soccer — multi-league parlays
+    "soccer": "Multi-League Parlay",
+    # Tennis — tiers (map everything to tier, not location)
+    "atp 250": "ATP 250",                   "atp250": "ATP 250",
+    "atp 500": "ATP 500",                   "atp500": "ATP 500",
+    "atp 1000": "ATP 1000",                 "atp1000": "ATP 1000",
+    "atp masters": "ATP 1000",
+    "challenger": "ATP Challenger",         "atp challenger": "ATP Challenger",
+    "tennis": "ATP 500",                    "atp tour": "ATP 500",
+    "grand slam": "Grand Slam",
+    "australian open": "Grand Slam",        "french open": "Grand Slam",
+    "roland garros": "Grand Slam",          "wimbledon": "Grand Slam",
+    "us open": "Grand Slam",
+    # Specific ATP events → tier
+    "acapulco open": "ATP 500",             "acapulco": "ATP 500",
+    "rio open": "ATP 250",                  "buenos aires": "ATP 250",
+    "argentina open": "ATP 250",
+    "rotterdam open": "ATP 500",            "rotterdam": "ATP 500",
+    "marseille": "ATP 250",                 "marseille open": "ATP 250",
+    "dubai": "ATP 500",                     "dubai open": "ATP 500",
+    "indian wells": "ATP 1000",             "miami open": "ATP 1000",
+    "miami": "ATP 1000",                    "madrid open": "ATP 1000",
+    "rome": "ATP 1000",                     "monte carlo": "ATP 1000",
     # Hockey
-    "nhl":               "NHL",
+    "nhl": "NHL",
 }
 
-SPORT_COLOR  = {"Soccer": GOLD, "Tennis": "#4B9EFF", "Hockey": "#A8D8EA"}
-SPORT_EMOJI  = {"Soccer": "⚽", "Tennis": "🎾", "Hockey": "🏒"}
+CURRENCY_SYMBOLS = {"USD": "$", "EUR": "€", "GBP": "£", "CAD": "C$", "AUD": "A$"}
+SPORT_COLOR      = {"Soccer": GOLD, "Tennis": "#4B9EFF", "Hockey": "#A8D8EA"}
+SPORT_EMOJI      = {"Soccer": "⚽", "Tennis": "🎾", "Hockey": "🏒"}
 
-# Default bankroll settings per sport
 SPORT_DEFAULTS = {
-    "soccer":  {"bankroll": 20000, "unit_pct": 0.05},
-    "tennis":  {"bankroll": 10000, "unit_pct": 0.01},
-    "hockey":  {"bankroll": 20000, "unit_pct": 0.05},
+    "soccer": {"bankroll": 10000, "unit_pct": 0.05},
+    "tennis": {"bankroll": 10000, "unit_pct": 0.05},
+    "hockey": {"bankroll": 10000, "unit_pct": 0.05},
 }
+
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
+def fmt_month(m: str) -> str:
+    """Convert '2026-01' to 'January 2026'."""
+    try:
+        return datetime.strptime(m, "%Y-%m").strftime("%B %Y")
+    except Exception:
+        return m
+
+
+def bucket_stake(u: float) -> str:
+    if u <= 0.5:
+        return "Small (≤0.5u)"
+    elif u <= 1.25:
+        return "Medium (0.75–1.25u)"
+    else:
+        return "Large (≥1.5u)"
 
 
 # ── Data ───────────────────────────────────────────────────────────────────────
@@ -139,13 +161,11 @@ def _league_clean(row) -> str:
     league = row.get("league")
     sport  = row.get("sport", "")
     if not league or str(league).lower() in ("none", "null", ""):
-        if sport == "tennis": return "ATP Tour"
+        if sport == "tennis": return "ATP 500"
         if sport == "hockey": return "NHL"
         return "Unknown"
     mapped = LEAGUE_MAP.get(str(league).lower())
-    if mapped:
-        return mapped
-    return str(league).title()
+    return mapped if mapped else str(league).title()
 
 
 @st.cache_data(ttl=60)
@@ -157,17 +177,17 @@ def load() -> pd.DataFrame:
     conn.close()
     df["sport_label"]    = df["sport"].str.capitalize()
     df["bet_type_clean"] = df["bet_type"].map(
-        lambda x: BET_TYPE_MAP.get(str(x).lower(), str(x).replace("_"," ").title() if x else "Other")
+        lambda x: BET_TYPE_MAP.get(str(x).lower(), str(x).replace("_", " ").title() if x else "Other")
     )
     df["league_clean"] = df.apply(_league_clean, axis=1)
     df["dow"]          = df["date"].dt.day_name()
     df["month"]        = df["date"].dt.to_period("M").astype(str)
+    df["stake_bucket"] = df["units"].map(bucket_stake)
     return df
 
 
 @st.cache_data(ttl=60)
 def load_monthly() -> pd.DataFrame:
-    """Monthly units won per sport for compound calculator."""
     if not os.path.exists(DB_PATH):
         return pd.DataFrame()
     conn = sqlite3.connect(DB_PATH)
@@ -180,7 +200,7 @@ def load_monthly() -> pd.DataFrame:
     return df
 
 
-# ── Chart helpers ──────────────────────────────────────────────────────────────
+# ── UI helpers ─────────────────────────────────────────────────────────────────
 def stat_card(col, value: str, label: str, color: str = TEXT):
     col.markdown(
         f'<div class="metric-card">'
@@ -204,7 +224,7 @@ def sport_stats(df: pd.DataFrame) -> dict:
                 win_rate=wr, units_staked=staked, units_profit=profit, roi=roi, avg_odds=avg_o)
 
 
-def bar_chart(df_in, x_col, y_col, title):
+def bar_chart(df_in, x_col, y_col, title, height=260):
     colors = [GREEN if v >= 0 else RED for v in df_in[y_col]]
     fig = go.Figure(go.Bar(
         x=df_in[x_col], y=df_in[y_col],
@@ -219,7 +239,7 @@ def bar_chart(df_in, x_col, y_col, title):
         yaxis=dict(gridcolor=BORDER, linecolor=BORDER, tickformat="+.2f",
                    zeroline=True, zerolinecolor="#3a3f52", zerolinewidth=1),
         margin=dict(l=0, r=0, t=36, b=0),
-        height=280,
+        height=height,
     )
     return fig
 
@@ -228,105 +248,98 @@ def result_icon(r):
     return {"win": "✅ Win", "loss": "✖ Loss", "push": "➖ Push", "pending": "⏳ Pending"}.get(r, r)
 
 
-# ── Compound calculator ────────────────────────────────────────────────────────
-def calculate_compound(monthly_units: list, start_bankroll: float, unit_pct: float) -> list:
-    """Calculate month-by-month compound bankroll growth."""
+def calculate_compound(monthly_units, start_bankroll, unit_pct):
     bankroll = start_bankroll
     rows = []
     for month, units in monthly_units:
+        begin     = bankroll
         unit_size = bankroll * unit_pct
         profit    = units * unit_size
         bankroll  = max(bankroll + profit, 0)
         rows.append({
-            "Month":     month,
-            "Units":     units,
-            "Unit Size": unit_size,
-            "Profit":    profit,
-            "Bankroll":  bankroll,
+            "Month":              month,
+            "Beginning Bankroll": begin,
+            "Units":              units,
+            "Unit Size":          unit_size,
+            "Profit":             profit,
+            "Bankroll":           bankroll,
         })
     return rows
 
 
-def render_compound_tab(sport_key: str | None, monthly_df: pd.DataFrame,
-                        default_bankroll: float, default_unit_pct: float,
-                        selected_sports: list | None = None):
-    """Render a compound calculator tab for one sport or a combined selection."""
-    c1, c2 = st.columns([1, 1])
-    start_br   = c1.number_input("Starting Bankroll ($)", value=int(default_bankroll),
-                                  step=1000, min_value=100, key=f"br_{sport_key or 'all'}")
-    unit_pct_in = c2.number_input("Unit Size (%)", value=round(default_unit_pct * 100, 1),
-                                   step=0.5, min_value=0.5, max_value=20.0,
-                                   key=f"up_{sport_key or 'all'}")
+def render_compound_tab(sport_key, monthly_df, default_bankroll, default_unit_pct,
+                        selected_sports=None, currency_sym="$"):
+    c1, c2 = st.columns(2)
+    start_br    = c1.number_input(
+        f"Starting Bankroll ({currency_sym})", value=int(default_bankroll),
+        step=1000, min_value=100, key=f"br_{sport_key or 'all'}",
+    )
+    unit_pct_in = c2.number_input(
+        "Unit Size (%)", value=round(default_unit_pct * 100, 1),
+        step=0.5, min_value=0.5, max_value=20.0, key=f"up_{sport_key or 'all'}",
+    )
     unit_pct = unit_pct_in / 100
 
-    # Filter monthly data
     if sport_key:
         mdf = monthly_df[monthly_df["sport"] == sport_key].copy()
     else:
         sports_to_include = selected_sports or ["soccer", "tennis", "hockey"]
         mdf = (monthly_df[monthly_df["sport"].isin(sports_to_include)]
-               .groupby("month")["units_won"].sum().reset_index()
-               .rename(columns={"units_won": "units_won"}))
+               .groupby("month")["units_won"].sum().reset_index())
         mdf["sport"] = "combined"
 
     if mdf.empty:
-        st.info("No settled picks yet to calculate compounding.")
+        st.info("No settled picks yet.")
         return
 
-    monthly_list = list(zip(mdf["month"], mdf["units_won"]))
-    rows = calculate_compound(monthly_list, float(start_br), unit_pct)
+    rows    = calculate_compound(list(zip(mdf["month"], mdf["units_won"])), float(start_br), unit_pct)
     comp_df = pd.DataFrame(rows)
 
-    # Summary metrics
-    current_br  = comp_df["Bankroll"].iloc[-1]
+    current_br   = comp_df["Bankroll"].iloc[-1]
     total_profit = current_br - start_br
     growth_pct   = total_profit / start_br * 100
-    p_sign = "+" if total_profit >= 0 else ""
 
     m1, m2, m3 = st.columns(3)
-    stat_card(m1, f"${current_br:,.0f}", "Current Bankroll", GREEN if current_br >= start_br else RED)
-    stat_card(m2, f"{p_sign}${total_profit:,.0f}", "Total Profit", GREEN if total_profit >= 0 else RED)
-    stat_card(m3, f"{p_sign}{growth_pct:.1f}%", "Growth", GREEN if growth_pct >= 0 else RED)
+    stat_card(m1, f"{currency_sym}{current_br:,.0f}", "Current Bankroll",
+              GREEN if current_br >= start_br else RED)
+    profit_disp = (f"+{currency_sym}{total_profit:,.0f}" if total_profit >= 0
+                   else f"-{currency_sym}{abs(total_profit):,.0f}")
+    growth_disp = f"{'+' if growth_pct >= 0 else ''}{growth_pct:.1f}%"
+    stat_card(m2, profit_disp, "Total Profit", GREEN if total_profit >= 0 else RED)
+    stat_card(m3, growth_disp, "Growth",       GREEN if growth_pct >= 0 else RED)
 
     st.markdown("")
 
-    # Bankroll growth chart
-    fig = go.Figure(go.Scatter(
-        x=comp_df["Month"], y=comp_df["Bankroll"],
-        mode="lines+markers",
-        line=dict(color=GOLD, width=2.5),
-        marker=dict(color=GOLD, size=7),
-        hovertemplate="<b>%{x}</b><br>Bankroll: $%{y:,.0f}<extra></extra>",
-        fill="tozeroy",
-        fillcolor="rgba(212,175,55,0.08)",
-    ))
-    fig.add_hline(y=start_br, line_dash="dot", line_color=BORDER, line_width=1)
-    fig.update_layout(
-        plot_bgcolor=CARD_BG, paper_bgcolor=CARD_BG,
-        font=dict(color=MUTED),
-        xaxis=dict(gridcolor=BORDER, linecolor=BORDER, title=""),
-        yaxis=dict(gridcolor=BORDER, linecolor=BORDER, title="Bankroll ($)", tickformat="$,.0f"),
-        margin=dict(l=0, r=0, t=12, b=0), height=280,
+    # Month-by-month compound table
+    disp = comp_df.copy()
+    disp["Month"]              = disp["Month"].map(fmt_month)
+    disp["Beginning Bankroll"] = disp["Beginning Bankroll"].map(lambda x: f"{currency_sym}{x:,.0f}")
+    disp["Unit %"]             = f"{unit_pct * 100:.1f}%"
+    disp["Unit Size"]          = disp["Unit Size"].map(lambda x: f"{currency_sym}{x:,.0f}")
+    disp["Units Won"]          = disp["Units"].map(lambda x: f"{x:+.2f}u")
+    disp["Profit"]             = disp["Profit"].map(
+        lambda x: f"+{currency_sym}{x:,.0f}" if x >= 0 else f"-{currency_sym}{abs(x):,.0f}"
     )
-    st.plotly_chart(fig, use_container_width=True)
-
-    # Month-by-month table
-    with st.expander("Month-by-month breakdown"):
-        disp = comp_df.copy()
-        disp["Units"]     = disp["Units"].map(lambda x: f"{x:+.2f}u")
-        disp["Unit Size"] = disp["Unit Size"].map(lambda x: f"${x:,.0f}")
-        disp["Profit"]    = disp["Profit"].map(lambda x: f"{'+' if x >= 0 else ''}${x:,.0f}")
-        disp["Bankroll"]  = disp["Bankroll"].map(lambda x: f"${x:,.0f}")
-        st.dataframe(disp, use_container_width=True, hide_index=True)
+    disp["Ending Bankroll"]    = disp["Bankroll"].map(lambda x: f"{currency_sym}{x:,.0f}")
+    st.dataframe(
+        disp[["Month", "Beginning Bankroll", "Unit %", "Unit Size", "Units Won", "Profit", "Ending Bankroll"]],
+        use_container_width=True,
+        hide_index=True,
+    )
 
 
-# ── App ────────────────────────────────────────────────────────────────────────
-df_all   = load()
-monthly  = load_monthly()
+# ══════════════════════════════════════════════════════════════════════════════
+# APP
+# ══════════════════════════════════════════════════════════════════════════════
+df_all  = load()
+monthly = load_monthly()
 
+# Header
 st.markdown("# 🏆  Le Top Paddock")
-st.markdown(f"<span style='color:{MUTED};font-size:0.9rem'>Verified picks record · Updated live</span>",
-            unsafe_allow_html=True)
+st.markdown(
+    f"<span style='color:{MUTED};font-size:0.9rem'>Verified picks record · Updated live</span>",
+    unsafe_allow_html=True,
+)
 
 if df_all.empty:
     st.info("No picks data found.")
@@ -334,38 +347,40 @@ if df_all.empty:
 
 df = df_all[df_all["result"] != "pending"].copy()
 
+# Pending banner
 pending_count = (df_all["result"] == "pending").sum()
 if pending_count:
     st.markdown(
         f"<div style='background:#1a2030;border:1px solid {GOLD};border-radius:8px;"
-        f"padding:10px 16px;margin-bottom:16px;font-size:0.9rem;color:{GOLD}'>"
-        f"⏳  <b>{pending_count} pick(s) pending</b> — results will update automatically</div>",
+        f"padding:10px 16px;margin-bottom:8px;font-size:0.9rem;color:{GOLD}'>"
+        f"⏳  <b>{pending_count} pick(s) pending</b> — results update automatically</div>",
         unsafe_allow_html=True,
     )
 
+st.markdown("")
+
+# ── SECTION 1: Overall Record ─────────────────────────────────────────────────
+st.markdown('<div class="section-title">Overall Record</div>', unsafe_allow_html=True)
+
 s = sport_stats(df)
 
-# ── Overall stats ──────────────────────────────────────────────────────────────
-st.markdown('<div class="section-title">Overall Record — All Sports</div>', unsafe_allow_html=True)
 c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
-stat_card(c1, f"{s['wins']}W / {s['losses']}L",   "Record")
-stat_card(c2, f"{s['win_rate']:.1f}%",             "Win Rate",
+stat_card(c1, f"{s['wins']}W / {s['losses']}L", "Record")
+stat_card(c2, f"{s['win_rate']:.1f}%",           "Win Rate",
           GREEN if s['win_rate'] >= 55 else (MUTED if s['win_rate'] >= 50 else RED))
-stat_card(c3, f"{s['roi']:+.1f}%",                 "ROI",
-          GREEN if s['roi'] > 0 else RED)
-stat_card(c4, f"{s['units_profit']:+.2f}u",        "Total P&L",
-          GREEN if s['units_profit'] > 0 else RED)
-stat_card(c5, f"{s['avg_odds']:.2f}",              "Avg Odds")
-stat_card(c6, str(s['total']),                     "Total Bets")
-stat_card(c7, f"{s['units_staked']:.2f}u",         "Units Staked")
+stat_card(c3, f"{s['roi']:+.1f}%",              "ROI",         GREEN if s['roi'] > 0 else RED)
+stat_card(c4, f"{s['units_profit']:+.2f}u",     "Net P&L",     GREEN if s['units_profit'] > 0 else RED)
+stat_card(c5, f"{s['avg_odds']:.2f}",           "Avg Odds")
+stat_card(c6, str(s['total']),                  "Total Bets")
+stat_card(c7, f"{s['units_staked']:.1f}u",      "Units Staked")
 
 st.markdown("")
 
-# ── Cumulative P&L chart ───────────────────────────────────────────────────────
-st.markdown('<div class="section-title">Cumulative P&L by Sport</div>', unsafe_allow_html=True)
+# ── SECTION 2: Cumulative P&L ─────────────────────────────────────────────────
+st.markdown('<div class="section-title">Cumulative P&L</div>', unsafe_allow_html=True)
 
 df_pl = df.sort_values(["sport", "date", "id"]).copy()
-df_pl["cumul"] = df_pl.groupby("sport")["return_units"].cumsum()
+df_pl["cumul"]       = df_pl.groupby("sport")["return_units"].cumsum()
 df_pl["sport_label"] = df_pl["sport"].str.capitalize()
 
 fig_pl = px.line(
@@ -373,55 +388,85 @@ fig_pl = px.line(
     color_discrete_map=SPORT_COLOR,
     template="plotly_dark",
 )
-fig_pl.update_traces(line=dict(width=2.5),
-                     hovertemplate="<b>%{fullData.name}</b><br>%{x|%d %b %Y}<br>P&L: <b>%{y:+.2f}u</b><extra></extra>")
+fig_pl.update_traces(
+    line=dict(width=2.5),
+    hovertemplate="<b>%{fullData.name}</b><br>%{x|%d %b %Y}<br>P&L: <b>%{y:+.2f}u</b><extra></extra>",
+)
 fig_pl.add_hline(y=0, line_dash="dot", line_color=BORDER, line_width=1)
 fig_pl.update_layout(
-    plot_bgcolor=CARD_BG, paper_bgcolor=CARD_BG,
-    font=dict(color=MUTED),
+    plot_bgcolor=CARD_BG, paper_bgcolor=CARD_BG, font=dict(color=MUTED),
     xaxis=dict(gridcolor=BORDER, linecolor=BORDER, title=""),
     yaxis=dict(gridcolor=BORDER, linecolor=BORDER, title="Units", tickformat="+.2f"),
     legend=dict(title="", bgcolor="rgba(0,0,0,0)", bordercolor=BORDER),
-    margin=dict(l=0, r=0, t=12, b=0), height=340,
+    margin=dict(l=0, r=0, t=12, b=0), height=320,
     hovermode="x unified",
 )
 st.plotly_chart(fig_pl, use_container_width=True)
 
-# ── Sport summary cards ────────────────────────────────────────────────────────
-st.markdown('<div class="section-title">By Sport</div>', unsafe_allow_html=True)
-cols = st.columns(3)
+# ── SECTION 3: Monthly Performance ────────────────────────────────────────────
+st.markdown('<div class="section-title">Monthly Performance</div>', unsafe_allow_html=True)
 
-for col, sport in zip(cols, ["soccer", "tennis", "hockey"]):
+monthly_summary = (
+    df.groupby("month")
+    .agg(
+        bets=("result", "count"),
+        wins=("result", lambda x: (x == "win").sum()),
+        losses=("result", lambda x: (x == "loss").sum()),
+        net=("return_units", "sum"),
+        staked=("units", "sum"),
+    )
+    .reset_index()
+)
+monthly_summary["net"]      = monthly_summary["net"].round(4)
+monthly_summary["win_rate"] = (
+    monthly_summary["wins"] / (monthly_summary["wins"] + monthly_summary["losses"]) * 100
+).round(1)
+monthly_summary["roi"] = (monthly_summary["net"] / monthly_summary["staked"] * 100).round(1)
+monthly_summary = monthly_summary.sort_values("month", ascending=False)
+
+disp_m = monthly_summary[["month", "bets", "wins", "losses", "win_rate", "net", "roi"]].copy()
+disp_m["month"]    = disp_m["month"].map(fmt_month)
+disp_m.columns     = ["Month", "Bets", "W", "L", "Win %", "Net Units", "ROI %"]
+disp_m["Win %"]    = disp_m["Win %"].map("{:.1f}%".format)
+disp_m["Net Units"]= disp_m["Net Units"].map("{:+.2f}u".format)
+disp_m["ROI %"]    = disp_m["ROI %"].map("{:+.1f}%".format)
+st.dataframe(disp_m, use_container_width=True, hide_index=True)
+
+# ── SECTION 4: By Sport ───────────────────────────────────────────────────────
+st.markdown('<div class="section-title">By Sport</div>', unsafe_allow_html=True)
+
+# Sport summary cards
+sport_cols = st.columns(3)
+for col, sport in zip(sport_cols, ["soccer", "tennis", "hockey"]):
     sp = df[df["sport"] == sport]
     ss = sport_stats(sp)
-    em = SPORT_EMOJI[sport.capitalize()]
-    sc = SPORT_COLOR[sport.capitalize()]
+    em = SPORT_EMOJI.get(sport.capitalize(), "")
+    sc = SPORT_COLOR.get(sport.capitalize(), GOLD)
     pl_color = GREEN if ss["units_profit"] > 0 else RED
     sign = "+" if ss["units_profit"] >= 0 else ""
     with col:
         st.markdown(
             f'<div class="metric-card">'
-            f'<div style="font-size:1.25rem;font-weight:700;color:{sc};margin-bottom:14px">{em}  {sport.capitalize()}</div>'
+            f'<div style="font-size:1.1rem;font-weight:700;color:{sc};margin-bottom:14px">{em}  {sport.capitalize()}</div>'
             f'<div style="display:flex;justify-content:space-between;margin-bottom:8px">'
-            f'<span style="color:{MUTED};font-size:0.8rem">Record</span>'
+            f'<span style="color:{MUTED};font-size:0.82rem">Record</span>'
             f'<span style="font-weight:600">{ss["wins"]}W / {ss["losses"]}L</span></div>'
             f'<div style="display:flex;justify-content:space-between;margin-bottom:8px">'
-            f'<span style="color:{MUTED};font-size:0.8rem">Win Rate</span>'
+            f'<span style="color:{MUTED};font-size:0.82rem">Win Rate</span>'
             f'<span style="font-weight:600">{ss["win_rate"]:.1f}%</span></div>'
             f'<div style="display:flex;justify-content:space-between;margin-bottom:8px">'
-            f'<span style="color:{MUTED};font-size:0.8rem">ROI</span>'
+            f'<span style="color:{MUTED};font-size:0.82rem">ROI</span>'
             f'<span style="font-weight:600;color:{GREEN if ss["roi"]>0 else RED}">{ss["roi"]:+.1f}%</span></div>'
             f'<div style="display:flex;justify-content:space-between">'
-            f'<span style="color:{MUTED};font-size:0.8rem">P&L</span>'
+            f'<span style="color:{MUTED};font-size:0.82rem">Net P&L</span>'
             f'<span style="font-weight:700;font-size:1.1rem;color:{pl_color}">{sign}{ss["units_profit"]:.2f}u</span></div>'
             f'</div>',
             unsafe_allow_html=True,
         )
 
-st.markdown("---")
+st.markdown("")
 
-# ── Per-sport detail tabs ──────────────────────────────────────────────────────
-st.markdown('<div class="section-title">Detailed Stats by Sport</div>', unsafe_allow_html=True)
+# Sport detail tabs
 tabs = st.tabs(["⚽  Soccer", "🎾  Tennis", "🏒  Hockey"])
 
 for tab, sport in zip(tabs, ["soccer", "tennis", "hockey"]):
@@ -431,43 +476,36 @@ for tab, sport in zip(tabs, ["soccer", "tennis", "hockey"]):
             st.info(f"No {sport} picks recorded yet.")
             continue
 
-        ss = sport_stats(sp)
-        r1, r2, r3, r4, r5 = st.columns(5)
-        stat_card(r1, f"{ss['wins']}W / {ss['losses']}L", "Record")
-        stat_card(r2, f"{ss['win_rate']:.1f}%", "Win Rate",
-                  GREEN if ss["win_rate"] >= 55 else (MUTED if ss["win_rate"] >= 50 else RED))
-        stat_card(r3, f"{ss['roi']:+.1f}%", "ROI", GREEN if ss["roi"] > 0 else RED)
-        stat_card(r4, f"{ss['units_profit']:+.2f}u", "P&L", GREEN if ss["units_profit"] > 0 else RED)
-        stat_card(r5, f"{ss['avg_odds']:.2f}", "Avg Odds")
-
-        st.markdown("")
+        sp_color = SPORT_COLOR.get(sport.capitalize(), GOLD)
 
         # Cumulative P&L line
-        sp_cumul = sp.sort_values(["date", "id"]).copy()
-        sp_cumul["cumul"] = sp_cumul["return_units"].cumsum()
-        sp_color = SPORT_COLOR[sport.capitalize()]
+        sp_sorted = sp.sort_values(["date", "id"]).copy()
+        sp_sorted["cumul"] = sp_sorted["return_units"].cumsum()
 
         fig_sp = go.Figure(go.Scatter(
-            x=sp_cumul["date"], y=sp_cumul["cumul"],
+            x=sp_sorted["date"], y=sp_sorted["cumul"],
             mode="lines+markers",
             line=dict(color=sp_color, width=2.5),
             marker=dict(
                 color=[GREEN if r == "win" else (RED if r == "loss" else MUTED)
-                       for r in sp_cumul["result"]],
+                       for r in sp_sorted["result"]],
                 size=7,
+                line=dict(color=CARD_BG, width=1),
             ),
             hovertemplate="%{x|%d %b %Y}<br>Cumulative P&L: <b>%{y:+.2f}u</b><extra></extra>",
+            fill="tozeroy",
+            fillcolor=f"rgba({int(sp_color[1:3],16)},{int(sp_color[3:5],16)},{int(sp_color[5:],16)},0.06)",
         ))
         fig_sp.add_hline(y=0, line_dash="dot", line_color=BORDER, line_width=1)
         fig_sp.update_layout(
-            plot_bgcolor=CARD_BG, paper_bgcolor=CARD_BG,
-            font=dict(color=MUTED),
+            plot_bgcolor=CARD_BG, paper_bgcolor=CARD_BG, font=dict(color=MUTED),
             xaxis=dict(gridcolor=BORDER, linecolor=BORDER, title=""),
             yaxis=dict(gridcolor=BORDER, linecolor=BORDER, title="Cumulative Units", tickformat="+.2f"),
-            margin=dict(l=0, r=0, t=12, b=0), height=260,
+            margin=dict(l=0, r=0, t=12, b=0), height=280,
         )
         st.plotly_chart(fig_sp, use_container_width=True)
 
+        # P&L by Bet Type + Day of Week
         col_a, col_b = st.columns(2)
 
         with col_a:
@@ -484,69 +522,54 @@ for tab, sport in zip(tabs, ["soccer", "tennis", "hockey"]):
                      .rename(columns={"dow": "Day", "return_units": "P&L"}))
             st.plotly_chart(bar_chart(dow, "Day", "P&L", "P&L by Day of Week"), use_container_width=True)
 
-        if sport == "soccer":
+        # P&L by Competition (soccer + tennis; hockey is all NHL so skip)
+        if sport in ("soccer", "tennis"):
             lg = (sp.groupby("league_clean")["return_units"]
                     .agg(["sum", "count"]).reset_index()
                     .rename(columns={"league_clean": "Competition", "sum": "P&L", "count": "Bets"})
                     .sort_values("P&L", ascending=False))
-            st.plotly_chart(bar_chart(lg, "Competition", "P&L", "P&L by Competition"), use_container_width=True)
+            st.plotly_chart(bar_chart(lg, "Competition", "P&L", "P&L by Competition", height=300),
+                            use_container_width=True)
 
-        stake_grp = (sp.groupby("units")["return_units"]
+        # P&L by Stake Size (bucketed)
+        bucket_order = ["Small (≤0.5u)", "Medium (0.75–1.25u)", "Large (≥1.5u)"]
+        stake_grp = (sp.groupby("stake_bucket")["return_units"]
                        .agg(["sum", "count"]).reset_index()
-                       .rename(columns={"units": "Stake", "sum": "P&L", "count": "Bets"})
-                       .sort_values("Stake"))
-        stake_grp["Stake"] = stake_grp["Stake"].map(lambda x: f"{x}u")
-        st.plotly_chart(bar_chart(stake_grp, "Stake", "P&L", "P&L by Stake Size"), use_container_width=True)
+                       .rename(columns={"stake_bucket": "Stake Size", "sum": "P&L", "count": "Bets"}))
+        stake_grp["Stake Size"] = pd.Categorical(
+            stake_grp["Stake Size"], categories=bucket_order, ordered=True
+        )
+        stake_grp = stake_grp.sort_values("Stake Size")
+        st.plotly_chart(bar_chart(stake_grp, "Stake Size", "P&L", "P&L by Stake Size"),
+                        use_container_width=True)
 
-st.markdown("---")
-
-# ── Bankroll Compound Calculator ───────────────────────────────────────────────
-st.markdown('<div class="section-title">Bankroll Compound Calculator</div>', unsafe_allow_html=True)
-st.markdown(
-    f"<span style='color:{MUTED};font-size:0.85rem'>"
-    f"See how your bankroll would have grown by following our picks with compounding — "
-    f"profits reinvested monthly at your chosen unit size.</span>",
-    unsafe_allow_html=True,
-)
-st.markdown("")
-
-calc_tabs = st.tabs(["⚽  Soccer", "🎾  Tennis", "🏒  Hockey", "📊  Combined"])
-
-for ctab, sport in zip(calc_tabs[:3], ["soccer", "tennis", "hockey"]):
-    with ctab:
-        d = SPORT_DEFAULTS[sport]
-        render_compound_tab(sport, monthly, d["bankroll"], d["unit_pct"])
-
-with calc_tabs[3]:
-    st.markdown(f"<span style='color:{MUTED};font-size:0.85rem'>Select the sports you want to combine. Units from all selected sports are pooled together.</span>", unsafe_allow_html=True)
-    sport_opts = st.multiselect(
-        "Sports to include",
-        options=["Soccer", "Tennis", "Hockey"],
-        default=["Soccer", "Tennis", "Hockey"],
-        key="combined_sports",
-    )
-    selected = [s.lower() for s in sport_opts]
-    if selected:
-        render_compound_tab(None, monthly, 20000, 0.05, selected_sports=selected)
-    else:
-        st.info("Select at least one sport.")
-
-st.markdown("---")
-
-# ── All Bets History ───────────────────────────────────────────────────────────
+# ── SECTION 5: All Bets History ───────────────────────────────────────────────
 st.markdown('<div class="section-title">All Bets History</div>', unsafe_allow_html=True)
 
-fc1, fc2, fc3 = st.columns([2, 2, 2])
-sport_filter  = fc1.multiselect("Sport",   ["Soccer", "Tennis", "Hockey"],
-                                 default=["Soccer", "Tennis", "Hockey"])
-result_filter = fc2.multiselect("Result",  ["Win", "Loss", "Push", "Pending"],
-                                 default=["Win", "Loss", "Push", "Pending"])
-bet_filter    = fc3.multiselect("Bet Type", sorted(df_all["bet_type_clean"].unique()))
+# Build month filter with formatted labels
+month_vals        = sorted(df["month"].unique(), reverse=True)
+month_label_map   = {m: fmt_month(m) for m in month_vals}
+month_rev_map     = {v: k for k, v in month_label_map.items()}
+month_display_opts = [month_label_map[m] for m in month_vals]
+
+fc1, fc2, fc3, fc4 = st.columns([2, 2, 2, 2])
+sport_filter        = fc1.multiselect("Sport",    ["Soccer", "Tennis", "Hockey"],
+                                       default=["Soccer", "Tennis", "Hockey"])
+result_filter       = fc2.multiselect("Result",   ["Win", "Loss", "Push"],
+                                       default=["Win", "Loss", "Push"])
+bet_filter          = fc3.multiselect("Bet Type", sorted(df_all["bet_type_clean"].unique()))
+month_filter_labels = fc4.multiselect("Month",    month_display_opts)
+month_filter_raw    = [month_rev_map[l] for l in month_filter_labels]
 
 df_table = df_all[df_all["sport_label"].isin(sport_filter)].copy()
-df_table = df_table[df_table["result"].str.capitalize().isin(result_filter)]
+df_table = df_table[df_table["result"].str.capitalize().isin(
+    result_filter + ["Pending"] if "Pending" in result_filter else result_filter
+)]
+df_table = df_table[df_table["result"] != "pending"] if "Pending" not in result_filter else df_table
 if bet_filter:
     df_table = df_table[df_table["bet_type_clean"].isin(bet_filter)]
+if month_filter_raw:
+    df_table = df_table[df_table["month"].isin(month_filter_raw)]
 
 display = df_table.sort_values("date", ascending=False)[[
     "date", "sport_label", "league_clean", "description",
@@ -559,15 +582,28 @@ display["return_units"] = display.apply(
 )
 display["odds"]   = display["odds"].map(lambda x: f"{x:.2f}" if pd.notna(x) else "—")
 display["result"] = display["result"].map(result_icon)
-display["units"]  = display["units"].map(lambda x: f"{x}u")
+display["units"]  = display["units"].map(lambda x: f"{round(x, 2):g}u")
+display.columns   = ["Date", "Sport", "Competition", "Pick", "Stake", "Bet Type", "Odds", "Result", "P&L"]
 
-display.columns = ["Date", "Sport", "Competition", "Pick", "Stake", "Bet Type", "Odds", "Result", "P&L"]
+if not df_table.empty:
+    settled_t = df_table[df_table["result"].isin(["win", "loss", "push"])]
+    t_wins    = (settled_t["result"] == "win").sum()
+    t_losses  = (settled_t["result"] == "loss").sum()
+    t_net     = settled_t["return_units"].sum()
+    st.markdown(
+        f"<span style='color:{MUTED};font-size:0.85rem'>"
+        f"Showing <b style='color:{TEXT}'>{len(settled_t)}</b> settled bets · "
+        f"<b style='color:{GREEN if t_wins > t_losses else RED}'>{t_wins}W / {t_losses}L</b> · "
+        f"Net: <b style='color:{GREEN if t_net >= 0 else RED}'>{t_net:+.2f}u</b></span>",
+        unsafe_allow_html=True,
+    )
+    st.markdown("")
 
 st.dataframe(
     display,
     use_container_width=True,
     hide_index=True,
-    height=520,
+    height=480,
     column_config={
         "Date":        st.column_config.TextColumn("Date",        width=100),
         "Sport":       st.column_config.TextColumn("Sport",       width=80),
@@ -578,11 +614,55 @@ st.dataframe(
         "Odds":        st.column_config.TextColumn("Odds",        width=65),
         "Result":      st.column_config.TextColumn("Result",      width=100),
         "P&L":         st.column_config.TextColumn("P&L",         width=80),
-    }
+    },
 )
 
+# ── SECTION 6: Bankroll Compound Calculator ───────────────────────────────────
+st.markdown('<div class="section-title">Bankroll Compound Calculator</div>', unsafe_allow_html=True)
 st.markdown(
-    f"<div style='text-align:center;color:{MUTED};font-size:0.75rem;margin-top:24px'>"
+    f"<span style='color:{MUTED};font-size:0.85rem'>"
+    f"Simulate how a bankroll compounds month-by-month following these picks. "
+    f"Profits are reinvested at your chosen unit size each month.</span>",
+    unsafe_allow_html=True,
+)
+st.markdown("")
+
+currency     = st.selectbox("Currency", list(CURRENCY_SYMBOLS.keys()), key="calc_currency")
+currency_sym = CURRENCY_SYMBOLS[currency]
+
+# Combined is first tab (default open)
+calc_tabs = st.tabs(["📊  Combined", "⚽  Soccer", "🎾  Tennis", "🏒  Hockey"])
+
+with calc_tabs[0]:
+    st.markdown(
+        f"<span style='color:{MUTED};font-size:0.85rem'>"
+        f"Pool units from all selected sports into one compounding bankroll.</span>",
+        unsafe_allow_html=True,
+    )
+    sport_opts = st.multiselect(
+        "Sports to include",
+        options=["Soccer", "Tennis", "Hockey"],
+        default=["Soccer", "Tennis", "Hockey"],
+        key="combined_sports",
+    )
+    selected = [s.lower() for s in sport_opts]
+    if selected:
+        render_compound_tab(None, monthly, 10000, 0.05, selected_sports=selected,
+                            currency_sym=currency_sym)
+    else:
+        st.info("Select at least one sport.")
+
+for ctab, sport in zip(calc_tabs[1:], ["soccer", "tennis", "hockey"]):
+    with ctab:
+        d = SPORT_DEFAULTS[sport]
+        render_compound_tab(sport, monthly, d["bankroll"], d["unit_pct"],
+                            currency_sym=currency_sym)
+
+# Footer
+st.markdown("")
+st.markdown(
+    f"<div style='text-align:center;color:{MUTED};font-size:0.75rem;"
+    f"padding-top:16px;border-top:1px solid {BORDER}'>"
     f"Le Top Paddock · All records verified · Bet responsibly</div>",
     unsafe_allow_html=True,
 )
