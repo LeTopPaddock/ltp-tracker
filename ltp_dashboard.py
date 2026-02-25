@@ -175,6 +175,10 @@ def load() -> pd.DataFrame:
     conn = sqlite3.connect(DB_PATH)
     df = pd.read_sql("SELECT * FROM picks ORDER BY date, id", conn, parse_dates=["date"])
     conn.close()
+    # Round at source so every downstream sum/cumsum stays clean
+    df["return_units"]   = df["return_units"].round(4)
+    df["units"]          = df["units"].round(4)
+    df["odds"]           = df["odds"].round(2)
     df["sport_label"]    = df["sport"].str.capitalize()
     df["bet_type_clean"] = df["bet_type"].map(
         lambda x: BET_TYPE_MAP.get(str(x).lower(), str(x).replace("_", " ").title() if x else "Other")
@@ -380,7 +384,7 @@ st.markdown("")
 st.markdown('<div class="section-title">Cumulative P&L</div>', unsafe_allow_html=True)
 
 df_pl = df.sort_values(["sport", "date", "id"]).copy()
-df_pl["cumul"]       = df_pl.groupby("sport")["return_units"].cumsum()
+df_pl["cumul"]       = df_pl.groupby("sport")["return_units"].cumsum().round(2)
 df_pl["sport_label"] = df_pl["sport"].str.capitalize()
 
 fig_pl = px.line(
@@ -480,7 +484,7 @@ for tab, sport in zip(tabs, ["soccer", "tennis", "hockey"]):
 
         # Cumulative P&L line
         sp_sorted = sp.sort_values(["date", "id"]).copy()
-        sp_sorted["cumul"] = sp_sorted["return_units"].cumsum()
+        sp_sorted["cumul"] = sp_sorted["return_units"].cumsum().round(2)
 
         fig_sp = go.Figure(go.Scatter(
             x=sp_sorted["date"], y=sp_sorted["cumul"],
@@ -513,6 +517,7 @@ for tab, sport in zip(tabs, ["soccer", "tennis", "hockey"]):
                     .agg(["sum", "count"]).reset_index()
                     .rename(columns={"bet_type_clean": "Bet Type", "sum": "P&L", "count": "Bets"})
                     .sort_values("P&L", ascending=False))
+            bt["P&L"] = bt["P&L"].round(2)
             st.plotly_chart(bar_chart(bt, "Bet Type", "P&L", "P&L by Bet Type"), use_container_width=True)
 
         with col_b:
@@ -520,6 +525,7 @@ for tab, sport in zip(tabs, ["soccer", "tennis", "hockey"]):
             dow = (sp.groupby("dow")["return_units"].sum()
                      .reindex(dow_order).fillna(0).reset_index()
                      .rename(columns={"dow": "Day", "return_units": "P&L"}))
+            dow["P&L"] = dow["P&L"].round(2)
             st.plotly_chart(bar_chart(dow, "Day", "P&L", "P&L by Day of Week"), use_container_width=True)
 
         # P&L by Competition (soccer + tennis; hockey is all NHL so skip)
@@ -528,6 +534,7 @@ for tab, sport in zip(tabs, ["soccer", "tennis", "hockey"]):
                     .agg(["sum", "count"]).reset_index()
                     .rename(columns={"league_clean": "Competition", "sum": "P&L", "count": "Bets"})
                     .sort_values("P&L", ascending=False))
+            lg["P&L"] = lg["P&L"].round(2)
             st.plotly_chart(bar_chart(lg, "Competition", "P&L", "P&L by Competition", height=300),
                             use_container_width=True)
 
@@ -536,6 +543,7 @@ for tab, sport in zip(tabs, ["soccer", "tennis", "hockey"]):
         stake_grp = (sp.groupby("stake_bucket")["return_units"]
                        .agg(["sum", "count"]).reset_index()
                        .rename(columns={"stake_bucket": "Stake Size", "sum": "P&L", "count": "Bets"}))
+        stake_grp["P&L"] = stake_grp["P&L"].round(2)
         stake_grp["Stake Size"] = pd.Categorical(
             stake_grp["Stake Size"], categories=bucket_order, ordered=True
         )
@@ -589,7 +597,7 @@ if not df_table.empty:
     settled_t = df_table[df_table["result"].isin(["win", "loss", "push"])]
     t_wins    = (settled_t["result"] == "win").sum()
     t_losses  = (settled_t["result"] == "loss").sum()
-    t_net     = settled_t["return_units"].sum()
+    t_net     = round(settled_t["return_units"].sum(), 2)
     st.markdown(
         f"<span style='color:{MUTED};font-size:0.85rem'>"
         f"Showing <b style='color:{TEXT}'>{len(settled_t)}</b> settled bets · "
