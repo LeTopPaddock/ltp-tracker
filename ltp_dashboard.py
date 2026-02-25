@@ -96,13 +96,13 @@ SPORT_EMOJI = {"Soccer": "⚽", "Tennis": "🎾", "Hockey": "🏒"}
 
 
 # ── Data ───────────────────────────────────────────────────────────────────────
-@st.cache_data(ttl=180)
+@st.cache_data(ttl=60)
 def load() -> pd.DataFrame:
     if not os.path.exists(DB_PATH):
         return pd.DataFrame()
     conn = sqlite3.connect(DB_PATH)
     df = pd.read_sql(
-        "SELECT * FROM picks WHERE result != 'pending' ORDER BY date, id",
+        "SELECT * FROM picks ORDER BY date, id",
         conn, parse_dates=["date"],
     )
     conn.close()
@@ -184,19 +184,31 @@ def line_chart(df_in, x, y, color=None, title="", height=360):
 
 
 def result_icon(r):
-    return {"win": "✅ Win", "loss": "✖ Loss", "push": "➖ Push"}.get(r, r)
+    return {"win": "✅ Win", "loss": "✖ Loss", "push": "➖ Push", "pending": "⏳ Pending"}.get(r, r)
 
 
 # ── App ────────────────────────────────────────────────────────────────────────
-df = load()
+df_all = load()  # all picks including pending
 
 # Header
 st.markdown(f"# 🏆  Le Top Paddock")
 st.markdown(f"<span style='color:{MUTED};font-size:0.9rem'>Verified picks record · Updated live</span>", unsafe_allow_html=True)
 
-if df.empty:
+if df_all.empty:
     st.info("No picks data found. Run ltp_migrate.py first.")
     st.stop()
+
+# Stats and charts only use settled picks
+df = df_all[df_all["result"] != "pending"].copy()
+
+pending_count = (df_all["result"] == "pending").sum()
+if pending_count:
+    st.markdown(
+        f"<div style='background:#1a2030;border:1px solid {GOLD};border-radius:8px;"
+        f"padding:10px 16px;margin-bottom:16px;font-size:0.9rem;color:{GOLD}'>"
+        f"⏳  <b>{pending_count} pick(s) pending</b> — results will update automatically</div>",
+        unsafe_allow_html=True,
+    )
 
 s = sport_stats(df)
 
@@ -351,10 +363,10 @@ st.markdown('<div class="section-title">All Bets History</div>', unsafe_allow_ht
 # Filters
 fc1, fc2, fc3 = st.columns([2,2,2])
 sport_filter  = fc1.multiselect("Sport", ["Soccer","Tennis","Hockey"], default=["Soccer","Tennis","Hockey"])
-result_filter = fc2.multiselect("Result", ["Win","Loss","Push"], default=["Win","Loss","Push"])
-bet_filter    = fc3.multiselect("Bet Type", sorted(df["bet_type_clean"].unique()))
+result_filter = fc2.multiselect("Result", ["Win","Loss","Push","Pending"], default=["Win","Loss","Push","Pending"])
+bet_filter    = fc3.multiselect("Bet Type", sorted(df_all["bet_type_clean"].unique()))
 
-df_table = df[df["sport_label"].isin(sport_filter)].copy()
+df_table = df_all[df_all["sport_label"].isin(sport_filter)].copy()
 df_table = df_table[df_table["result"].str.capitalize().isin(result_filter)]
 if bet_filter:
     df_table = df_table[df_table["bet_type_clean"].isin(bet_filter)]
@@ -366,7 +378,9 @@ display = df_table.sort_values("date", ascending=False)[[
 ]].copy()
 
 display["date"]         = display["date"].dt.strftime("%d %b %Y")
-display["return_units"] = display["return_units"].map(lambda x: f"{x:+.2f}u")
+display["return_units"] = display.apply(
+    lambda row: "—" if row["result"] == "pending" else f"{row['return_units']:+.2f}u", axis=1
+)
 display["odds"]         = display["odds"].map(lambda x: f"{x:.2f}" if pd.notna(x) else "—")
 display["result"]       = display["result"].map(result_icon)
 display["units"]        = display["units"].map(lambda x: f"{x}u")
