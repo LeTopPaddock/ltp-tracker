@@ -109,10 +109,25 @@ def load() -> pd.DataFrame:
 
     df["sport_label"]    = df["sport"].str.capitalize()
     df["bet_type_clean"] = df["bet_type"].map(lambda x: BET_TYPE_MAP.get(str(x).lower(), str(x).capitalize() if x else "Other"))
-    df["league_clean"]   = df["league"].map(lambda x: LEAGUE_MAP.get(str(x), str(x).title() if x else "Unknown"))
+    df["league_clean"]   = df.apply(_league_clean, axis=1)
     df["dow"]            = df["date"].dt.day_name()
     df["month"]          = df["date"].dt.to_period("M").astype(str)
     return df
+
+
+def _league_clean(row) -> str:
+    league = row.get("league")
+    sport  = row.get("sport", "")
+    if not league or str(league).lower() in ("none", "null", ""):
+        if sport == "tennis":  return "ATP Tour"
+        if sport == "hockey":  return "NHL"
+        return "Unknown"
+    mapped = LEAGUE_MAP.get(str(league))
+    if mapped:
+        return mapped
+    if str(league).lower() == "tennis":
+        return "ATP Tour"
+    return str(league).title()
 
 
 def stat_card(col, value: str, label: str, color: str = TEXT):
