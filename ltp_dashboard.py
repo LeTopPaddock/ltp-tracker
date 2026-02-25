@@ -360,10 +360,10 @@ if bet_filter:
     df_table = df_table[df_table["bet_type_clean"].isin(bet_filter)]
 
 # Build display table
-display = df_table[[
+display = df_table.sort_values("date", ascending=False)[[
     "date","sport_label","league_clean","description",
     "units","bet_type_clean","odds","result","return_units"
-]].copy().sort_values(["date","id"] if "id" in df_table.columns else "date", ascending=False)
+]].copy()
 
 display["date"]         = display["date"].dt.strftime("%d %b %Y")
 display["return_units"] = display["return_units"].map(lambda x: f"{x:+.2f}u")
