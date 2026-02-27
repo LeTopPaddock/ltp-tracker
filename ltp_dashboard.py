@@ -11,6 +11,7 @@ from datetime import datetime
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "ltp_picks.db")
+BANKROLL_UNITS = 20  # 1u = 5% of bankroll → bankroll = 20u
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -221,7 +222,7 @@ def sport_stats(df: pd.DataFrame) -> dict:
     pushes = (df["result"] == "push").sum()
     staked = df["units"].sum()
     profit = df["return_units"].sum()
-    roi    = profit / staked * 100 if staked else 0
+    roi    = profit / BANKROLL_UNITS * 100 if staked else 0
     wr     = wins / (wins + losses) * 100 if (wins + losses) else 0
     avg_o  = df[df["odds"].notna()]["odds"].mean() if df["odds"].notna().any() else 0
     return dict(total=len(df), wins=int(wins), losses=int(losses), pushes=int(pushes),
@@ -425,7 +426,7 @@ monthly_summary["net"]      = monthly_summary["net"].round(4)
 monthly_summary["win_rate"] = (
     monthly_summary["wins"] / (monthly_summary["wins"] + monthly_summary["losses"]) * 100
 ).round(1)
-monthly_summary["roi"] = (monthly_summary["net"] / monthly_summary["staked"] * 100).round(1)
+monthly_summary["roi"] = (monthly_summary["net"] / BANKROLL_UNITS * 100).round(1)
 monthly_summary = monthly_summary.sort_values("month", ascending=False)
 
 disp_m = monthly_summary[["month", "bets", "wins", "losses", "win_rate", "net", "roi"]].copy()
