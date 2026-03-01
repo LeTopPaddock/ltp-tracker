@@ -250,7 +250,7 @@ def bar_chart(df_in, x_col, y_col, title, height=260):
 
 
 def result_icon(r):
-    return {"win": "✅ Win", "loss": "✖ Loss", "push": "➖ Push", "pending": "⏳ Pending"}.get(r, r)
+    return {"win": "✅ Win", "loss": "✖ Loss", "push": "➖ Push", "void": "🔵 Void", "pending": "⏳ Pending"}.get(r, r)
 
 
 def calculate_compound(monthly_units, start_bankroll, unit_pct):
@@ -564,8 +564,8 @@ month_display_opts = [month_label_map[m] for m in month_vals]
 fc1, fc2, fc3, fc4 = st.columns([2, 2, 2, 2])
 sport_filter        = fc1.multiselect("Sport",    ["Soccer", "Tennis", "Hockey"],
                                        default=["Soccer", "Tennis", "Hockey"])
-result_filter       = fc2.multiselect("Result",   ["Win", "Loss", "Push"],
-                                       default=["Win", "Loss", "Push"])
+result_filter       = fc2.multiselect("Result",   ["Win", "Loss", "Push", "Void"],
+                                       default=["Win", "Loss", "Push", "Void"])
 bet_filter          = fc3.multiselect("Bet Type", sorted(df_all["bet_type_clean"].unique()))
 month_filter_labels = fc4.multiselect("Month",    month_display_opts)
 month_filter_raw    = [month_rev_map[l] for l in month_filter_labels]
@@ -595,7 +595,7 @@ display["units"]  = display["units"].map(lambda x: f"{round(x, 2):g}u")
 display.columns   = ["Date", "Sport", "Competition", "Pick", "Stake", "Bet Type", "Odds", "Result", "P&L"]
 
 if not df_table.empty:
-    settled_t = df_table[df_table["result"].isin(["win", "loss", "push"])]
+    settled_t = df_table[df_table["result"].isin(["win", "loss", "push", "void"])]
     t_wins    = (settled_t["result"] == "win").sum()
     t_losses  = (settled_t["result"] == "loss").sum()
     t_net     = round(settled_t["return_units"].sum(), 2)
